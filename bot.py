@@ -63,6 +63,7 @@ def update_message(update, context):
 
 @check_priveleges
 def check_group_id(update, context):
+    logger.error(update)
     update.message.reply_text(update.message.chat.id)
 
 @check_priveleges
