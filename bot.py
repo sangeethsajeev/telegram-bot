@@ -61,6 +61,9 @@ def error(update, context):
 def update_message(update, context):
     update.message.reply_text("New Vaccine Doses have come for some Districts")
 
+@check_priveleges
+def check_group_id(update, context):
+    update.message.reply_text(update.message.chat.id)
 
 @check_priveleges
 def APIStatus(update, context):
@@ -234,6 +237,7 @@ dp.add_handler(CommandHandler("broadcast", broadcast))
 dp.add_handler(CommandHandler('stop', stop, pass_args=True))
 dp.add_handler(CommandHandler("notify", notify, pass_args=True))
 dp.add_handler(CommandHandler("APIStatus", APIStatus))
+dp.add_handler(CommandHandler('getCode',check_group_id))
 dp.add_handler(MessageHandler(Filters.text, echo_v1))
 
 dp.add_error_handler(error)
