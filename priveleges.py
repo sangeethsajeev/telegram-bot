@@ -1,7 +1,6 @@
 
 import logging
 import configparser
-
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -22,9 +21,11 @@ def check_priveleges(function):
                 return function(*args, *kwargs)
             else:
                 logger.error(str(user['username'])+" just tried to access me!")
+                args[0].message.reply_text("You're not my Admin :)..!")
                 print("Privelege Not Found!")
                 raise PermissionDeniedError
         except Exception as e:
             print(e)
+            args[0].message.reply_text("You're not my Admin :)..!")
         
     return wrapper
