@@ -192,6 +192,7 @@ dp.add_handler(CommandHandler('stopNotify', stopNotify))
 dp.add_handler(CommandHandler("broadcast", broadcast))
 dp.add_handler(CommandHandler('stop', stop, pass_args=True))
 dp.add_handler(CommandHandler("notify", notify, pass_args=True))
+dp.add_handler(CommandHandler("APIStatus", APIStatus))
 dp.add_handler(MessageHandler(Filters.text, echo_v1))
 
 dp.add_error_handler(error)
