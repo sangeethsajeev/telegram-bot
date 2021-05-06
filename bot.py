@@ -49,6 +49,7 @@ def stop(bot,update, context):
         threading.Thread(target=shutdown).start()
     else:
         update.message.reply_text("Incorrect Password.")
+
 def start(update, context):
     # userdb.store_user(update.message.chat.username,update.message.chat.id)
     update.message.reply_text(os.getenv("HELLO_TEXT"))
@@ -89,56 +90,95 @@ def stopNotify(update, context):
 
 @check_priveleges
 def notify(update,content):
-    t1 = datetime.datetime.now()
+    try:
+        update.message.reply_text("Starting Notification Services for "+str(content.args[0]+". I will stop listening to other services now."))
+        t1 = datetime.datetime.now()
 
-    group_ids = get_group_ids()
-    if update.message.chat.id not in group_ids:
-        group_ids[update.message.chat.id] = get_district_ids(content.args[0])
-    
-    if group_ids[update.message.chat.id]==None:
-        api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(update.message.chat.id)+'&text= District Not Found in our List. Is the spelling correct?'
-        response = requests.get(api_)
-        logger.log(response.content.decode('utf8'))
-        print(response.content.decode('utf8'))        
-        return 0
-    
-    check_time = 10
-    downtime_count = 0
-    while True:
-        t2 = datetime.datetime.now()-t1
-       
-        if t2.seconds>check_time:
-            downtime_flag=False
-            for group_id in group_ids:
-                logger.error(t2)
-                res = api.fetch_values(group_ids.get(group_id,None))
-                if res in "Vaccine Unavailable.\n":
-                    time.sleep(300)
-
-                elif res in "CoWin API Down\n":
-                    logger.error("CoWin API Down\n")
-                    if downtime_count==0:
-                        api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text=CoWin API is down!'
-                        response = requests.get(api_)
-                        print(response.content.decode('utf8'))
-                    downtime_flag = True
-                    time.sleep(600)
-                else:
-                    api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text='+res
-                    response = requests.get(api_)
-                    print(response.content.decode('utf8'))
-                    check_time=60
-                
-                t1 = datetime.datetime.now()
-            if downtime_flag:
-                downtime_count+=1
+        group_ids = get_group_ids()
+        if update.message.chat.id not in group_ids:
+            group_ids[update.message.chat.id] = get_district_ids(content.args[0])
         
-        if downtime_count==6:
-            for group_id in group_ids:
-                api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text= CoWin API Down - Turning Off Notifier'
-                response = requests.get(api_)
-                print(response.content.decode('utf8'))
-            break
+        if group_ids[update.message.chat.id]==None:
+            echo_chat(text_="District Not Found in our List. Is the spelling correct?", chat_id_=str(update.message.chat.id))
+            # api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(update.message.chat.id)+'&text= District Not Found in our List. Is the spelling correct?'
+            # response = requests.get(api_)
+            # logger.log(response.content.decode('utf8'))
+            # print(response.content.decode('utf8'))        
+            return 0
+        
+        check_time = 10
+        downtime_count = 0
+        vaccine_count = dict()
+        vaccine_count_flag = dict()
+        for group_id in group_ids:
+            vaccine_count[group_id] = 0
+            vaccine_count_flag[group_id] = True
+        while True:
+            t2 = datetime.datetime.now()-t1
+        
+            if t2.seconds>check_time:
+                downtime_flag=False
+                for group_id in group_ids:
+                    logger.error(t2)
+                    res = api.fetch_values(group_ids.get(group_id,None))
+                    if res in "Vaccine Unavailable.\n":
+                        try:
+                            vaccine_count[group_id]+=1
+                            if vaccine_count_flag[group_id]:
+                                echo_chat(text_="Vaccine Unavailable for this District Now! I will check again in 5 minutes. You will get the next notificaiton in 2 hours.", chat_id_=str(group_id))
+                                # api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text=Vaccine Unavailable for this District Now!'
+                                # response = requests.get(api_)
+                                # print(response.content.decode('utf8'))
+
+                            time.sleep(300)
+                        except Exception as e:
+                            logger.error("Vaccine Unavailable "+e)
+
+                    elif res in "CoWin API Down\n":
+                        logger.error("CoWin API Down\n")
+                        if downtime_count==0:
+                            echo_chat(text_="CoWin API is down! If this stays the same for an hour, I will stop checking.", chat_id_=str(group_id))
+                            # api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text=CoWin API is down!'
+                            # response = requests.get(api_)
+                            # print(response.content.decode('utf8'))
+                        downtime_flag = True
+                        time.sleep(600)
+                    else:
+                        logger.warning("Sending messages to "+str(group_id))
+                        echo_chat(text_=res, chat_id_=str(group_id))
+                        # api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text='+res
+                        # response = requests.get(api_)
+                        # print(response.content.decode('utf8'))
+                        check_time=60
+                    
+                    t1 = datetime.datetime.now()
+                if downtime_flag:
+                    downtime_count+=1
+            
+            if downtime_count==6:
+                for group_id in group_ids:
+                    echo_chat(text_="CoWin API Continues to be down, I am gonna stop checking now.", chat_id_=str(group_id))
+                    # api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text= CoWin API Down - Turning Off Notifier'
+                    # response = requests.get(api_)
+                    # print(response.content.decode('utf8'))
+                break
+            
+            if vaccine_count[group_id]>11:
+                vaccine_count_flag[group_id]= True
+                vaccine_count[group_id] = 0
+    
+    except Exception as e:
+        logger.log("Notify Function Error: "+e)
+        return 0
+
+def echo_chat(text_,chat_id_):
+    try:
+        api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(chat_id_)+'&text='+text_
+        response = requests.get(api_)
+        print(response.content.decode('utf8'))
+    except Exception as e:
+        print(e)
+        logger.error(e)
 
 
 @check_priveleges
