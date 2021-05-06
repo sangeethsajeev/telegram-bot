@@ -23,7 +23,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger('telegram_bot.info')
 
 def get_district_ids(name):
-    district_config.read('configs/district_code.ini')
+    district_config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'configs/district_code.ini'))
     try:
         return district_config['DISTRICTS'][name.lower()]
     except Exception as e:
@@ -31,7 +31,8 @@ def get_district_ids(name):
         return None
     
 def get_group_ids():
-    group_config.read('configs/group_district_map.ini')
+    group_config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'configs/group_district_map.ini'))
+    # group_config.read('configs/group_district_map.ini')
     try:
         return dict(group_config['GROUPS'])
     except Exception as e:
