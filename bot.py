@@ -117,6 +117,7 @@ def notify(update,content):
         for group_id in group_ids:
             vaccine_count[group_id] = 0
             vaccine_count_flag[group_id] = True
+        sleep_time=60
         while True:
             t2 = datetime.datetime.now()-t1
         
@@ -134,7 +135,7 @@ def notify(update,content):
                                 # response = requests.get(api_)
                                 # print(response.content.decode('utf8'))
 
-                            time.sleep(300)
+                            sleep_time=300
                         except Exception as e:
                             logger.error("Vaccine Unavailable "+e)
 
@@ -146,7 +147,7 @@ def notify(update,content):
                             # response = requests.get(api_)
                             # print(response.content.decode('utf8'))
                         downtime_flag = True
-                        time.sleep(600)
+                        sleep_time=600
                     else:
                         logger.warning("Sending messages to "+str(group_id))
                         echo_chat(text_=res, chat_id_=str(group_id))
@@ -154,8 +155,10 @@ def notify(update,content):
                         # response = requests.get(api_)
                         # print(response.content.decode('utf8'))
                         check_time=60
-                    
-                    t1 = datetime.datetime.now()
+                        sleep_time=60
+
+                time.sleep(sleep_time)    
+                t1 = datetime.datetime.now()
                 if downtime_flag:
                     downtime_count+=1
             
