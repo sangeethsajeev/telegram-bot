@@ -134,6 +134,7 @@ def notify(update,content):
                                 # api_ = os.getenv("TELEGRAM_API")+os.getenv("TOKEN")+'/sendMessage?chat_id='+str(group_id)+'&text=Vaccine Unavailable for this District Now!'
                                 # response = requests.get(api_)
                                 # print(response.content.decode('utf8'))
+                                vaccine_count_flag[group_id]=False
 
                             sleep_time=300
                         except Exception as e:
@@ -156,6 +157,8 @@ def notify(update,content):
                         # print(response.content.decode('utf8'))
                         check_time=60
                         sleep_time=60
+                        vaccine_count_flag[group_id] = True
+                        vaccine_count[group_id] = 0
 
                 time.sleep(sleep_time)    
                 t1 = datetime.datetime.now()
